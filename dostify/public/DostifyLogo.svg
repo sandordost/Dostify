@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" width="396.01" height="101.12" viewBox="0 0 396.01 101.12">
+  <defs>
+    <style>
+      .cls-1 {
+        font-size: 12.41px;
+        font-family: var(--font-segoe-ui);
+        font-weight: 700;
+      }
+
+      .cls-1, .cls-2, .cls-3 {
+        fill: #7a7ebc;
+      }
+
+      .cls-4 {
+        fill: none;
+        stroke: #7a7ebc;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2 {
+        font-family: var(--font-segoe-ui);
+        font-size: 70.95px;
+      }
+    </style>
+  </defs>
+  <path class="cls-3" d="M50.55,0C22.63,0,0,22.64,0,50.56s22.63,50.56,50.55,50.56,50.56-22.64,50.56-50.56S78.47,0,50.55,0ZM73.12,53.78c-7.12,5.51-7.94,7.05-10.01,7.11-7.35.23-12.72-13.76-14.67-12.89-1.96.88,5.1,14.26-.2,21.37-2.42,3.24-6.66,4.19-9.8,4.5-1.8-1.34-10.8-8.3-12.66-20.97-1.55-10.48,2.72-18.42,4.11-20.77,6.71-.44,16.07-.34,26.89,2.1,11.73,2.64,20.82,7.04,26.88,10.58-2.93,2.74-6.44,5.79-10.54,8.97Z"/>
+  <g>
+    <text class="cls-2" transform="translate(117.05 73.87)"><tspan x="0" y="0">Dostify</tspan></text>
+    <g>
+      <path class="cls-4" d="M395.51,45.89c0,4.14-3.35,7.5-7.5,7.5s-7.5-3.36-7.5-7.5,3.36-7.5,7.5-7.5,7.5,3.36,7.5,7.5Z"/>
+      <text class="cls-1" transform="translate(384.21 50.11)"><tspan x="0" y="0">R</tspan></text>
+    </g>
+  </g>
+</svg>
