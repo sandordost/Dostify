@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ThemeProvider } from "next-themes";
+import BackgroundImage from "@/public/images/dust-background.jpg";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,11 +42,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${segoeUi.variable} antialiased`}
-      >
-        {children}
+    <html lang="en" suppressHydrationWarning className="h-full">
+      <body className="h-full">
+        <div
+          className="fixed inset-0 -z-10 bg-cover bg-center h-full"
+          style={{
+            backgroundImage: `url(${BackgroundImage.src})`,
+            filter: "blur(8px)",
+            transform: "scale(1.05)",
+          }}
+        />
+
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <main className="h-full">
+            {children}
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );
