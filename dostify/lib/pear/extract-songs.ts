@@ -1,3 +1,4 @@
+
 import type { Song } from "@/lib/types/song";
 
 type AnyObj = Record<string, any>;
@@ -68,6 +69,8 @@ export function extractSongsFromPearSearch(response: AnyObj): Song[] {
             title: getFlexText(r, 0).trim() || "Unknown title",
             artist: getFlexText(r, 1).trim() || "Unknown artist",
             thumbnailUrl: pickBestThumbnail(thumbs),
+            elapsedTime: 0,
+            songDuration: 0
         };
 
         if (!byId.has(videoId)) byId.set(videoId, song);

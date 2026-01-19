@@ -1,22 +1,39 @@
-"use client"
+"use client";
 
-import { useSyncExternalStore } from "react";
-import { songQueueStore } from "@/lib/types/song-queue-store";
-import { Song } from "@/lib/types/song";
-
-const EMPTY_QUEUE: Song[] = []; // ✅ cached, altijd dezelfde referentie
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Song } from "@/lib/types/song";
+import { addToQueueAction, clearQueueAction, getQueueAction } from "@/app/actions/queue";
 
 export function useSongQueue() {
-    const queue = useSyncExternalStore(
-        (cb) => songQueueStore.subscribe(cb),
-        () => songQueueStore.getSnapshot(),
-        () => EMPTY_QUEUE
-    );
+    const [queue, setQueue] = useState<Song[]>([]);
+    const pollingRef = useRef<number | null>(null);
 
-    return {
-        queue,
-        addToQueue: (song: Song) => songQueueStore.add(song),
-        getNextInQueue: () => songQueueStore.next(),
-        clearQueue: () => songQueueStore.clear(),
-    };
+    const refresh = useCallback(async () => {
+        const q = await getQueueAction();
+        setQueue(q);
+    }, []);
+
+    useEffect(() => {
+        refresh();
+
+        pollingRef.current = window.setInterval(() => {
+            refresh();
+        }, 750);
+
+        return () => {
+            if (pollingRef.current) window.clearInterval(pollingRef.current);
+        };
+    }, [refresh]);
+
+    const addToQueue = useCallback(async (song: Song) => {
+        const q = await addToQueueAction(song);
+        setQueue(q);
+    }, []);
+
+    const clearQueue = useCallback(async () => {
+        const q = await clearQueueAction();
+        setQueue(q);
+    }, []);
+
+    return { queue, addToQueue, clearQueue, refresh };
 }

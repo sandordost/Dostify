@@ -5,12 +5,15 @@ import { pearClient } from "@/lib/pear/pear-client";
 
 export default class YtPlayer extends BasePlayer {
     public async PlaySong(song: Song): Promise<void> {
-        await pearClient.addSongToQueue(song.id);
+        await pearClient.clearQueue();
+        const tries = 20;
+        for (let i = 0; i < tries; i++) {
+            await pearClient.addSongToQueue(song.id);
+            await sleep(500)
+            const itemAvailable = (await pearClient.getQueue()).items.length > 0
+            if (itemAvailable) break;
+        }
         await sleep(400);
-        const queue = await pearClient.getQueue();
-        const queueCount = queue.items.length;
-        console.log(queueCount);
-        await pearClient.playQueueIndex(queueCount - 1);
         await pearClient.nextSong();
     }
 

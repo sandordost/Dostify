@@ -1,4 +1,4 @@
-import { getPearApiUrl } from "@/hooks/use-config";
+import { getPearApiUrlServer } from "./pear-config.server";
 
 export type PearSongResponse = {
     isPaused: boolean;
@@ -28,7 +28,7 @@ async function pearRequest<T = unknown>(
     path: string,
     options: { method?: "GET" | "POST" | "DELETE" | "PATCH"; body?: any } = {}
 ): Promise<T> {
-    const base = getPearApiUrl().replace(/\/+$/, "");
+    const base = getPearApiUrlServer().replace(/\/+$/, "");
     const method = options.method ?? "POST";
 
     const res = await fetch(`${base}${path}`, {
@@ -74,7 +74,7 @@ export const pearClient = {
 
     previousSong: async () => pearRequest<void>("/previous", { method: "POST" }),
 
-    addSongToQueue: async (id: string) => pearRequest<void>("/queue", { method: "POST", body: { videoId: id, insertPosition: "INSERT_AT_END" } }),
+    addSongToQueue: async (id: string) => pearRequest<void>("/queue", { method: "POST", body: { videoId: id, insertPosition: "INSERT_AFTER_CURRENT_VIDEO" } }),
 
     clearQueue: async () => pearRequest<void>("/queue", { method: "DELETE" }),
 

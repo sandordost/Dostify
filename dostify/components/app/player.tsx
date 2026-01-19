@@ -1,95 +1,143 @@
-"use client"
+"use client";
 
-import { clamp, cn, formatTime, sleep } from "@/lib/utils";
+import { clamp, cn, formatTime } from "@/lib/utils";
 import AudioItem from "../ui/audio-item";
 import { Slider } from "@/components/ui/slider";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LucideVolume2, PlayCircle, SkipForward, SkipBack, PauseCircle } from "lucide-react";
 import { AudioSlider } from "../ui/audio-slider";
-import { usePlayerManager } from "@/hooks/use-player-manager";
-import { Song } from "@/lib/types/song";
+import type { Song } from "@/lib/types/song";
+
+import {
+    togglePlayAction,
+    nextSongAction,
+    prevSongAction,
+    getStateAction,
+    setVolumeAction,
+    seekAction,
+} from "@/app/actions/player";
 
 type PlayerProps = {
-    className?: string
-}
+    className?: string;
+};
 
 export default function AppPlayer({ className }: PlayerProps) {
     const [currentTime, setCurrentTime] = useState(0);
     const [maxTime, setMaxTime] = useState(180);
-    const [volumeValue, setVolumeValue] = useState([65]);
-    const [isPlaying, setIsPlaying] = useState<boolean>(false);
-    const [currentSong, setCurrentSong] = useState<Song | undefined>(undefined)
-    const { playerManager } = usePlayerManager();
+    const [volumeValue, setVolumeValue] = useState<number[]>([65]);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentSong, setCurrentSong] = useState<Song | undefined>(undefined);
 
-    playerManager.currentPlayer?.IsPlaying().then(playing => {
-        setIsPlaying(playing);
-    })
+    const pollingRef = useRef<number | null>(null);
+    const timeUntilNextSong = 3;
+
+    async function refreshState() {
+        const s = await getStateAction();
+        setCurrentSong(s.song);
+        setIsPlaying(s.isPlaying);
+        setVolumeValue([Math.round(s.volume ?? 0)]);
+        setCurrentTime(s.song?.elapsedTime || 0);
+        setMaxTime(s.song?.songDuration || 0);
+        return s;
+    }
 
     async function playButtonPressed() {
-        await playerManager.TogglePlay();
-
-        await sleep(150);
-
-        playerManager.currentPlayer?.IsPlaying().then(playing => {
-            setIsPlaying(playing);
-        })
+        const r = await togglePlayAction();
+        setIsPlaying(r.isPlaying);
     }
 
     async function previousButtonClicked() {
-        await playerManager.PlayNextSong();
+        const r = await prevSongAction();
+        if (r.ok) {
+            setCurrentSong(r.song);
+            setIsPlaying(r.isPlaying);
+            setCurrentTime(r.song?.elapsedTime || 0);
+            setMaxTime(r.song?.songDuration || 0);
+        }
     }
 
     async function nextButtonClicked() {
-        await playerManager.PlayNextSong();
+        const r = await nextSongAction();
+        if (r.ok) {
+            setCurrentSong(r.song);
+            setIsPlaying(r.isPlaying);
+            setCurrentTime(r.song?.elapsedTime || 0);
+            setMaxTime(r.song?.songDuration || 0);
+        }
     }
 
     async function currentTimeValueChanged(seconds: number) {
         setCurrentTime(seconds);
-        await playerManager.currentPlayer?.SetPlaybackTime(seconds);
+        await seekAction(seconds);
     }
 
     async function volumeValueChanged(volume: number[]) {
         setVolumeValue(volume);
-        await playerManager.currentPlayer?.SetVolumePercent(volume[0])
+        await setVolumeAction(volume[0]);
     }
 
     useEffect(() => {
-        const interval = setInterval(async () => {
-            const song = await playerManager.currentPlayer?.GetCurrentSong()
-            setCurrentSong(song);
-            console.log(song?.elapsedTime);
-            setCurrentTime(song?.elapsedTime || 0)
-            setMaxTime(song?.songDuration || 0)
-        }, 1000);
+        let cancelled = false;
 
-        return () => clearInterval(interval);
+        (async () => {
+            if (cancelled) return;
+            await refreshState();
+
+            pollingRef.current = window.setInterval(async () => {
+                const s = await getStateAction();
+
+                const elapsed = s.song?.elapsedTime || 0;
+                const dur = s.song?.songDuration || 0;
+
+                setCurrentSong(s.song);
+                setCurrentTime(elapsed);
+                setMaxTime(dur);
+                setIsPlaying(s.isPlaying);
+
+                if (dur > 0 && dur - elapsed <= timeUntilNextSong) {
+                    await nextSongAction();
+                }
+            }, 500);
+        })();
+
+        return () => {
+            cancelled = true;
+            if (pollingRef.current) window.clearInterval(pollingRef.current);
+        };
     }, []);
 
     return (
-        <div className={cn(className, 'bg-[rgba(0,0,0,0.96)] flex flex-col w-full rounded-t-xl')}>
+        <div className={cn(className, "bg-[rgba(0,0,0,0.96)] flex flex-col w-full rounded-t-xl")}>
             <div className="flex flex-row justify-around w-full">
-                <AudioItem className="flex-1 overflow-hidden" title={currentSong?.title || 'Unknown'} description={currentSong?.artist} imageSrc={currentSong?.thumbnailUrl} mode="player" />
+                <AudioItem
+                    className="flex-1 overflow-hidden"
+                    title={currentSong?.title || "Unknown"}
+                    description={currentSong?.artist}
+                    imageSrc={currentSong?.thumbnailUrl}
+                    mode="player"
+                />
+
                 <div className="flex flex-row gap-4 flex-1 items-center justify-center">
                     <div onClick={previousButtonClicked}>
                         <SkipBack size={30} color="rgb(220,220,220)" />
                     </div>
-                    <div onClick={playButtonPressed} >
-                        {!isPlaying && (
-                            <PlayCircle size={50} color="white" />
-                        )}
-                        {isPlaying && (
-                            <PauseCircle size={50} color="white" />
-                        )}
+
+                    <div onClick={playButtonPressed}>
+                        {!isPlaying && <PlayCircle size={50} color="white" />}
+                        {isPlaying && <PauseCircle size={50} color="white" />}
                     </div>
+
                     <div onClick={nextButtonClicked}>
                         <SkipForward size={30} color="rgb(220,220,220)" />
                     </div>
                 </div>
+
                 <div className="flex flex-row flex-1 flex-shrink-0 gap-2 items-center justify-end">
-                    <LucideVolume2 size="30" />
+                    <LucideVolume2 size={30} />
                     <Slider className="w-30" id="slider" onValueChange={volumeValueChanged} value={volumeValue} />
                 </div>
             </div>
+
             <div className="flex flex-row gap-3 items-center">
                 <span>{formatTime(currentTime)}</span>
                 <AudioSlider

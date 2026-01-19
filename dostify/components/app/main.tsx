@@ -9,8 +9,8 @@ import { ChangeEvent, useEffect, useState } from "react";
 import { usePearDesktop } from "@/hooks/use-pear-desktop";
 import { Song } from "@/lib/types/song";
 import { useDebounce } from "@/hooks/use-debounce";
-import { usePlayerManager } from "@/hooks/use-player-manager";
 import { useSongQueue } from "@/hooks/use-song-queue";
+import { useGlobalState } from "../global-state";
 
 type MainProps = {
     className?: string
@@ -21,8 +21,8 @@ export default function AppMain({ className }: MainProps) {
     const [searchText, setSearchText] = useState("");
     const { searchSongs: searchYt } = usePearDesktop();
     const [songs, setSongs] = useState<Song[]>([])
-    const { playerManager } = usePlayerManager();
     const { queue, addToQueue } = useSongQueue();
+    const { radioMode } = useGlobalState();
 
     const debouncedSearch = useDebounce(searchText, 300);
 
@@ -53,20 +53,22 @@ export default function AppMain({ className }: MainProps) {
                 </div>
 
                 { /* Queue */}
-                <div className={cn(containerClassName, 'flex-grow flex flex-col overflow-hidden')}>
-                    <div className="flex flex-row gap-3 text-[rgb(180,180,180)]">
-                        <ListMusic />
-                        <h2 className="text-md text-[rgb(180,180,180)]">Wachtrij</h2>
-                    </div>
-                    <Separator orientation="horizontal" color="rgb(180,180,180)" className="my-2" />
-                    <div className="flex-1 h-full w-full overflow-y-scroll overflow-x-hidden">
-                        <div className="flex flex-col gap-2">
-                            {queue.map(song => (
-                                <AudioItem mode='queue' title={song.title} description={song.artist} imageSrc={song.thumbnailUrl} />
-                            ))}
+                {!radioMode && (
+                    <div className={cn(containerClassName, 'flex-grow flex flex-col overflow-hidden')}>
+                        <div className="flex flex-row gap-3 text-[rgb(180,180,180)]">
+                            <ListMusic />
+                            <h2 className="text-md text-[rgb(180,180,180)]">Wachtrij</h2>
+                        </div>
+                        <Separator orientation="horizontal" color="rgb(180,180,180)" className="my-2" />
+                        <div className="flex-1 h-full w-full overflow-y-scroll overflow-x-hidden">
+                            <div className="flex flex-col gap-2">
+                                {queue.map(song => (
+                                    <AudioItem mode='queue' title={song.title} description={song.artist} imageSrc={song.thumbnailUrl} />
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Right Side */}

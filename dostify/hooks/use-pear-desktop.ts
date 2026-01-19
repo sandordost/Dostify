@@ -1,21 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { getPearApiUrl } from "./use-config"; // pas aan naar jouw pad
-import { extractSongsFromPearSearch } from "@/lib/pear/extract-songs";
 import type { Song } from "@/lib/types/song";
-
-export type PearSearchBody = {
-    query: string;
-    params?: string;
-    continuation?: string;
-};
-
-export type PearSearchResponse = Record<string, unknown>;
+import type { PearSearchBody, PearSearchResponse } from "@/lib/types/pear-search";
+import { pearSearchRawAction, pearSearchSongsAction } from "@/app/actions/pear-search";
 
 type PearError = {
     message: string;
-    status?: number;
     details?: unknown;
 };
 
@@ -24,50 +15,26 @@ export function usePearDesktop() {
     const [error, setError] = React.useState<PearError | null>(null);
     const [lastResponse, setLastResponse] = React.useState<PearSearchResponse | null>(null);
 
-    const abortRef = React.useRef<AbortController | null>(null);
-    const baseUrl = getPearApiUrl().replace(/\/+$/, "");
+    // Abort werkt niet echt met server actions; dit is een "soft cancel"
+    const reqIdRef = React.useRef(0);
 
     const searchRaw = React.useCallback(async (body: PearSearchBody) => {
-        abortRef.current?.abort();
-        const ac = new AbortController();
-        abortRef.current = ac;
+        const reqId = ++reqIdRef.current;
 
         setLoading(true);
         setError(null);
 
         try {
-            const res = await fetch(`${baseUrl}/search`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    query: body.query,
-                    params: body.params ?? "",
-                    continuation: body.continuation ?? "",
-                }),
-                signal: ac.signal,
-            });
+            const data = await pearSearchRawAction(body);
 
-            const text = await res.text();
-            const data = text ? (JSON.parse(text) as PearSearchResponse) : {};
-
-            if (!res.ok) {
-                setError({
-                    message: `Pear /search failed (${res.status})`,
-                    status: res.status,
-                    details: data,
-                });
-                setLoading(false);
-                return null;
-            }
+            // als er intussen een nieuw request is gestart, negeer deze response
+            if (reqId !== reqIdRef.current) return null;
 
             setLastResponse(data);
             setLoading(false);
             return data;
         } catch (e) {
-            if (e instanceof DOMException && e.name === "AbortError") {
-                setLoading(false);
-                return null;
-            }
+            if (reqId !== reqIdRef.current) return null;
 
             setError({ message: e instanceof Error ? e.message : "Unknown error", details: e });
             setLoading(false);
@@ -76,13 +43,32 @@ export function usePearDesktop() {
     }, []);
 
     const searchSongs = React.useCallback(async (body: PearSearchBody): Promise<Song[]> => {
-        const res = await searchRaw(body);
-        if (!res) return [];
-        return extractSongsFromPearSearch(res as any);
-    }, [searchRaw]);
+        const reqId = ++reqIdRef.current;
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const songs = await pearSearchSongsAction(body);
+
+            if (reqId !== reqIdRef.current) return [];
+
+            setLoading(false);
+            return songs;
+        } catch (e) {
+            if (reqId !== reqIdRef.current) return [];
+
+            setError({ message: e instanceof Error ? e.message : "Unknown error", details: e });
+            setLoading(false);
+            return [];
+        }
+    }, []);
 
     const cancel = React.useCallback(() => {
-        abortRef.current?.abort();
+        // we kunnen het lopende server request niet killen,
+        // maar we zorgen wel dat UI de response negeert.
+        reqIdRef.current++;
+        setLoading(false);
     }, []);
 
     return { searchRaw, searchSongs, cancel, loading, error, lastResponse };

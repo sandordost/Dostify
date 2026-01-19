@@ -1,4 +1,4 @@
-export type MusicService = "yt-music" | "spotify";
+export type MusicService = "yt-music" | "spotify" | 'radio';
 
 export interface Song {
     id: string;
