@@ -16,17 +16,21 @@ import {
     setVolumeAction,
     seekAction,
 } from "@/app/actions/player";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type PlayerProps = {
     className?: string;
+    onSongChange?: (song?: Song) => void;
 };
 
-export default function AppPlayer({ className }: PlayerProps) {
+export default function AppPlayer({ className, onSongChange }: PlayerProps) {
     const [currentTime, setCurrentTime] = useState(0);
     const [maxTime, setMaxTime] = useState(180);
     const [volumeValue, setVolumeValue] = useState<number[]>([65]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSong, setCurrentSong] = useState<Song | undefined>(undefined);
+
+    const isMobile = useIsMobile();
 
     const pollingRef = useRef<number | null>(null);
     const timeUntilNextSong = 3;
@@ -34,11 +38,21 @@ export default function AppPlayer({ className }: PlayerProps) {
     async function refreshState() {
         const s = await getStateAction();
         setCurrentSong(s.song);
+        emitSongChange(s.song);
         setIsPlaying(s.isPlaying);
         setVolumeValue([Math.round(s.volume ?? 0)]);
         setCurrentTime(s.song?.elapsedTime || 0);
         setMaxTime(s.song?.songDuration || 0);
         return s;
+    }
+
+    const lastSongIdRef = useRef<string | number | null>(null);
+
+    function emitSongChange(song?: Song) {
+        const id = (song?.id ?? song?.id ?? null) as any;
+        if (id === lastSongIdRef.current) return;
+        lastSongIdRef.current = id;
+        onSongChange?.(song);
     }
 
     async function playButtonPressed() {
@@ -50,6 +64,7 @@ export default function AppPlayer({ className }: PlayerProps) {
         const r = await prevSongAction();
         if (r.ok) {
             setCurrentSong(r.song);
+            emitSongChange(r.song);
             setIsPlaying(r.isPlaying);
             setCurrentTime(r.song?.elapsedTime || 0);
             setMaxTime(r.song?.songDuration || 0);
@@ -60,6 +75,7 @@ export default function AppPlayer({ className }: PlayerProps) {
         const r = await nextSongAction();
         if (r.ok) {
             setCurrentSong(r.song);
+            emitSongChange(r.song);
             setIsPlaying(r.isPlaying);
             setCurrentTime(r.song?.elapsedTime || 0);
             setMaxTime(r.song?.songDuration || 0);
@@ -90,12 +106,16 @@ export default function AppPlayer({ className }: PlayerProps) {
                 const dur = s.song?.songDuration || 0;
 
                 setCurrentSong(s.song);
+                emitSongChange(s.song);
                 setCurrentTime(elapsed);
                 setMaxTime(dur);
                 setIsPlaying(s.isPlaying);
 
                 if (dur > 0 && dur - elapsed <= timeUntilNextSong) {
-                    await nextSongAction();
+                    const r = await nextSongAction();
+                    if (r.ok) {
+                        emitSongChange(r.song);
+                    }
                 }
             }, 500);
         })();
@@ -107,7 +127,7 @@ export default function AppPlayer({ className }: PlayerProps) {
     }, []);
 
     return (
-        <div className={cn(className, "bg-[rgba(0,0,0,0.96)] flex flex-col w-full rounded-t-xl")}>
+        <div className={cn(className, "px-4 bg-[rgba(0,0,0,0.96)] flex flex-col w-full rounded-t-xl")}>
             <div className="flex flex-row justify-around w-full">
                 <AudioItem
                     className="flex-1 overflow-hidden"
@@ -115,26 +135,27 @@ export default function AppPlayer({ className }: PlayerProps) {
                     description={currentSong?.artist}
                     imageSrc={currentSong?.thumbnailUrl}
                     mode="player"
+                    isMobile={isMobile}
                 />
 
                 <div className="flex flex-row gap-4 flex-1 items-center justify-center">
                     <div onClick={previousButtonClicked}>
-                        <SkipBack size={30} color="rgb(220,220,220)" />
+                        <SkipBack size={isMobile ? 20 : 30} color="rgb(220,220,220)" />
                     </div>
 
                     <div onClick={playButtonPressed}>
-                        {!isPlaying && <PlayCircle size={50} color="white" />}
-                        {isPlaying && <PauseCircle size={50} color="white" />}
+                        {!isPlaying && <PlayCircle size={isMobile ? 30 : 50} color="white" />}
+                        {isPlaying && <PauseCircle size={isMobile ? 30 : 50} color="white" />}
                     </div>
 
                     <div onClick={nextButtonClicked}>
-                        <SkipForward size={30} color="rgb(220,220,220)" />
+                        <SkipForward size={isMobile ? 20 : 30} color="rgb(220,220,220)" />
                     </div>
                 </div>
 
                 <div className="flex flex-row flex-1 flex-shrink-0 gap-2 items-center justify-end">
-                    <LucideVolume2 size={30} />
-                    <Slider className="w-30" id="slider" onValueChange={volumeValueChanged} value={volumeValue} />
+                    <LucideVolume2 size={isMobile ? 20 : 30} />
+                    <Slider style={{ width: isMobile ? 70 : 125 }} id="slider" onValueChange={volumeValueChanged} value={volumeValue} />
                 </div>
             </div>
 

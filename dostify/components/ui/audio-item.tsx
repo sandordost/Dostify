@@ -1,7 +1,9 @@
+"use client"
+
 import { cn } from "@/lib/utils"
 import AudioPlaceholderImage from "@/public/images/audio-placeholder.jpg"
 
-type AudioItemMode = 'result' | 'queue' | 'player'
+type AudioItemMode = 'result' | 'queue' | 'player' | 'result-mobile'
 
 type AudioItemProps = {
     title: string
@@ -10,6 +12,8 @@ type AudioItemProps = {
     imageSrc?: string
     mode?: AudioItemMode
     onClicked?: () => void;
+    isMobile?: boolean;
+    isActive?: boolean;
 }
 
 export default function AudioItem(props: AudioItemProps) {
@@ -21,6 +25,8 @@ export default function AudioItem(props: AudioItemProps) {
             return QueueContainer(props)
         case 'player':
             return PlayerContainer(props)
+        case 'result-mobile':
+            return ResultMobileContainer(props);
     }
 }
 
@@ -47,13 +53,35 @@ function ResultContainer(props: AudioItemProps) {
     );
 }
 
+function ResultMobileContainer(props: AudioItemProps) {
+    return (
+        <div
+            className={cn(
+                props.className,
+                `select-none cursor-pointer bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-20 w-full flex flex-row items-center transition active:bg-[rgba(55,55,55,0.85)] active:scale-[1.02]`
+            )}
+            onClick={props.onClicked}
+        >
+            <div
+                className="h-full aspect-square bg-cover bg-center rounded-md"
+                style={{
+                    backgroundImage: `url(${props.imageSrc || AudioPlaceholderImage.src})`,
+                }}
+            />
+            <div className="ml-2">
+                <h2 className="text-sm font-bold">{props.title}</h2>
+                <h3 className="text-xs text-[rgb(210,210,210)]">{props.description}</h3>
+            </div>
+        </div>
+    );
+}
 
 function QueueContainer(props: AudioItemProps) {
     return (
         <div
             className={cn(
                 props.className,
-                "select-none cursor-pointer bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-20 w-full flex flex-row items-center transition hover:bg-[rgba(55,55,55,0.85)] hover:scale-[1.01] active:scale-[0.98]"
+                `select-none cursor-default bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-20 w-full flex flex-row items-center ${props.isActive ? "bg-[rgba(55,55,55,0.85)]" : ""}`
             )}
             onClick={props.onClicked}
         >
@@ -86,10 +114,12 @@ function PlayerContainer(props: AudioItemProps) {
                     backgroundImage: `url(${props.imageSrc || AudioPlaceholderImage.src})`,
                 }}
             />
-            <div className="ml-3">
-                <h2 className="text-m font-bold">{props.title}</h2>
-                <h3 className="text-sm text-[rgb(210,210,210)]">{props.description}</h3>
-            </div>
+            {!props.isMobile && (
+                <div className="ml-3">
+                    <h2 className="text-m font-bold">{props.title}</h2>
+                    <h3 className="text-sm text-[rgb(210,210,210)]">{props.description}</h3>
+                </div>
+            )}
         </div>
     );
 }

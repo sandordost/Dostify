@@ -1,0 +1,82 @@
+"use client"
+
+import { useDebounce } from "@/hooks/use-debounce";
+import { useIsMobile } from "@/hooks/use-mobile"
+import { usePearDesktop } from "@/hooks/use-pear-desktop";
+import { useSongQueue } from "@/hooks/use-song-queue";
+import { Song } from "@/lib/types/song";
+import { cn } from "@/lib/utils";
+import { LucideSearch } from "lucide-react";
+import { ChangeEvent, useEffect, useState } from "react";
+import { Input } from "../ui/input";
+import AudioItem from "../ui/audio-item";
+import QueuePanel from "./queue-panel";
+import { toast } from "sonner"
+
+type MusicScreenProps = {
+    className?: string
+    currentSong?: Song
+}
+
+export default function MusicScreen({ className, currentSong }: MusicScreenProps) {
+    const containerClassName = 'p-3 bg-[rgba(20,20,20,0.91)] rounded-md'
+    const [searchText, setSearchText] = useState("");
+    const { searchSongs: searchYt } = usePearDesktop();
+    const [songs, setSongs] = useState<Song[]>([])
+    const { queue, addToQueue } = useSongQueue();
+    const debouncedSearch = useDebounce(searchText, 300);
+    const isMobile = useIsMobile();
+
+    useEffect(() => {
+        if (!debouncedSearch.trim()) {
+            setSongs([]);
+            return;
+        }
+
+        searchYt({ query: debouncedSearch }).then((songs) => {
+            setSongs(songs);
+        });
+    }, [debouncedSearch, searchYt]);
+
+    function searchChanged(event: ChangeEvent<HTMLInputElement>): void {
+        setSearchText(event.target.value)
+    }
+
+    return (
+        <div className={cn(className, `flex ${isMobile ? "flex-col" : "flex-row"} gap-3`)}>
+
+            <div className={`flex flex-col ${!isMobile && "flex-1"} gap-3`}>
+                {/* Search Bar */}
+                <div className={cn(containerClassName, `flex flex-row items-center gap-3 py-2 pr-2 ${isMobile ? 'order-2' : ''}`)}>
+                    <LucideSearch />
+                    <Input onChange={searchChanged} type={'text'} className="h-10 m-0 border-none" />
+                </div>
+
+                { /* Queue */}
+                {!isMobile && (
+                    <QueuePanel currentSong={currentSong} queue={queue} containerClassName={containerClassName} />
+                )}
+            </div>
+
+            {/* Right Side */}
+            <div className={cn(containerClassName, `flex-2 p-5 flex-col overflow-hidden`)}>
+                <h1 className="text-xl font-bold mb-3">Resultaten</h1>
+                <div className="flex-1 h-full overflow-y-scroll">
+                    <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(180px,1fr))] mb-10">
+                        {songs.map((song) => (
+                            <AudioItem
+                                key={song.url}
+                                mode={isMobile ? 'result-mobile' : 'result'}
+                                title={song.title}
+                                imageSrc={song.thumbnailUrl}
+                                description={song.artist}
+                                onClicked={() => { addToQueue(song); toast.success(`${song.title} toegevoegd aan wachtrij`, { position: "top-center" }) }}
+                                className="overflow-hidden"
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}

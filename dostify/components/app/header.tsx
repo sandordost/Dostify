@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import DostifyLogo from "@/public/images/dostify-logo.svg"
 import { RadioSwitch } from "../ui/radio-switch";
 import { useGlobalState } from "../global-state";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type AppHeaderProps = {
     className?: string
@@ -11,13 +12,14 @@ type AppHeaderProps = {
 
 export function AppHeader({ className }: AppHeaderProps) {
     const { setRadioMode } = useGlobalState();
+    const isMobile = useIsMobile();
 
     return (
         <div className={cn(className, '')}>
-            <div className={cn(className, 'flex flex-row items-center gap-10')}>
+            <div className={cn(className, `flex flex-row ${isMobile ? 'justify-between' : ''} items-center gap-10`)}>
                 <img
                     src={DostifyLogo.src}
-                    width={250}
+                    width={isMobile ? 125 : 250}
                     className="brightness-255 contrast-125 drop-shadow-md"
                     alt="Dostify"
                 />

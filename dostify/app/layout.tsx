@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { GlobalStateProvider } from "@/components/global-state";
 import PageBackground from "@/components/page-background";
+import { Toaster } from "sonner"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,14 +44,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`h-full ${segoeUi}`}>
+    <html lang="en" suppressHydrationWarning className={`dark h-full ${segoeUi}`}>
       <body className="h-full">
         <GlobalStateProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
             <PageBackground />
             <main className="h-full">
               {children}
             </main>
+            <Toaster />
           </ThemeProvider>
         </GlobalStateProvider>
       </body>
