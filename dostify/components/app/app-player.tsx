@@ -17,6 +17,7 @@ import {
     seekAction,
 } from "@/app/actions/player";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { VolumeSlider } from "../ui/volume-slider";
 
 type PlayerProps = {
     className?: string;
@@ -155,7 +156,7 @@ export default function AppPlayer({ className, onSongChange }: PlayerProps) {
 
                 <div className="flex flex-row flex-1 flex-shrink-0 gap-2 items-center justify-end">
                     <LucideVolume2 size={isMobile ? 20 : 30} />
-                    <Slider style={{ width: isMobile ? 70 : 125 }} id="slider" onValueChange={volumeValueChanged} value={volumeValue} />
+                    <VolumeSlider style={{ width: isMobile ? 70 : 125 }} id="slider" onValueChange={volumeValueChanged} value={volumeValue} />
                 </div>
             </div>
 
