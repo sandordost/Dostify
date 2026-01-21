@@ -2,7 +2,6 @@
 
 import { clamp, cn, formatTime } from "@/lib/utils";
 import AudioItem from "../ui/audio-item";
-import { Slider } from "@/components/ui/slider";
 import { useEffect, useRef, useState } from "react";
 import { LucideVolume2, PlayCircle, SkipForward, SkipBack, PauseCircle } from "lucide-react";
 import { AudioSlider } from "../ui/audio-slider";
@@ -12,9 +11,11 @@ import {
     togglePlayAction,
     nextSongAction,
     prevSongAction,
-    getStateAction,
+    getSongStateAction,
     setVolumeAction,
-    seekAction,
+    songSeekAction,
+    getVolumeAction,
+    getRadioStationStateAction,
 } from "@/app/actions/player";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { VolumeSlider } from "../ui/volume-slider";
@@ -22,9 +23,10 @@ import { VolumeSlider } from "../ui/volume-slider";
 type PlayerProps = {
     className?: string;
     onSongChange?: (song?: Song) => void;
+    radioMode: boolean;
 };
 
-export default function AppPlayer({ className, onSongChange }: PlayerProps) {
+export default function AppPlayer({ className, onSongChange, radioMode }: PlayerProps) {
     const [currentTime, setCurrentTime] = useState(0);
     const [maxTime, setMaxTime] = useState(180);
     const [volumeValue, setVolumeValue] = useState<number[]>([65]);
@@ -33,18 +35,55 @@ export default function AppPlayer({ className, onSongChange }: PlayerProps) {
 
     const isMobile = useIsMobile();
 
-    const pollingRef = useRef<number | null>(null);
     const timeUntilNextSong = 3;
 
+    const pollLockRef = useRef(false);
+    const pollTimerRef = useRef<number | null>(null);
+
     async function refreshState() {
-        const s = await getStateAction();
-        setCurrentSong(s.song);
-        emitSongChange(s.song);
-        setIsPlaying(s.isPlaying);
-        setVolumeValue([Math.round(s.volume ?? 0)]);
-        setCurrentTime(s.song?.elapsedTime || 0);
-        setMaxTime(s.song?.songDuration || 0);
-        return s;
+        if (!radioMode) {
+            // Music Mode
+            const s = await getSongStateAction();
+            if (!s) return;
+
+            const elapsed = s.song?.elapsedTime || 0;
+            const dur = s.song?.songDuration || 0;
+
+            setCurrentSong(s.song);
+            emitSongChange(s.song);
+            setCurrentTime(elapsed);
+            setMaxTime(dur);
+            setIsPlaying(s.isPlaying);
+
+            if (dur > 0 && dur - elapsed <= timeUntilNextSong) {
+                const r = await nextSongAction();
+                if (!r) return;
+                if (r.ok) {
+                    emitSongChange(r.song);
+                }
+            }
+        }
+        else {
+            // Radio Mode
+            const radioState = await getRadioStationStateAction();
+            const vol = await getVolumeAction();
+            setVolumeValue([Math.round(vol?.volume ?? 0)]);
+            setCurrentTime(radioState.timeElapsedSeconds ?? 0);
+            setMaxTime(radioState.cacheSeconds ?? radioState.timeElapsedSeconds ?? 0);
+            setIsPlaying(radioState.isPlaying ?? false);
+            const radioToSong: Song = {
+                id: `${radioState.station}-${radioState.nowPlaying}`,
+                thumbnailUrl: radioState.thumbnailUrl ?? "",
+                service: 'radio',
+                url: radioState.url ?? "",
+                title: radioState.station ?? "Onbekend station",
+                artist: `${radioState.nowPlaying?.artist} - ${radioState.nowPlaying?.title}`,
+                elapsedTime: radioState.timeElapsedSeconds ?? 0,
+                songDuration: radioState.cacheSeconds ?? 0,
+            }
+            setCurrentSong(radioToSong);
+            console.log(radioState);
+        }
     }
 
     const lastSongIdRef = useRef<string | number | null>(null);
@@ -58,11 +97,13 @@ export default function AppPlayer({ className, onSongChange }: PlayerProps) {
 
     async function playButtonPressed() {
         const r = await togglePlayAction();
+        if (!r) return;
         setIsPlaying(r.isPlaying);
     }
 
     async function previousButtonClicked() {
         const r = await prevSongAction();
+        if (!r) return;
         if (r.ok) {
             setCurrentSong(r.song);
             emitSongChange(r.song);
@@ -74,6 +115,7 @@ export default function AppPlayer({ className, onSongChange }: PlayerProps) {
 
     async function nextButtonClicked() {
         const r = await nextSongAction();
+        if (!r) return;
         if (r.ok) {
             setCurrentSong(r.song);
             emitSongChange(r.song);
@@ -85,7 +127,7 @@ export default function AppPlayer({ className, onSongChange }: PlayerProps) {
 
     async function currentTimeValueChanged(seconds: number) {
         setCurrentTime(seconds);
-        await seekAction(seconds);
+        await songSeekAction(seconds);
     }
 
     async function volumeValueChanged(volume: number[]) {
@@ -96,62 +138,61 @@ export default function AppPlayer({ className, onSongChange }: PlayerProps) {
     useEffect(() => {
         let cancelled = false;
 
-        (async () => {
+        async function tick() {
             if (cancelled) return;
-            await refreshState();
 
-            pollingRef.current = window.setInterval(async () => {
-                const s = await getStateAction();
-
-                const elapsed = s.song?.elapsedTime || 0;
-                const dur = s.song?.songDuration || 0;
-
-                setCurrentSong(s.song);
-                emitSongChange(s.song);
-                setCurrentTime(elapsed);
-                setMaxTime(dur);
-                setIsPlaying(s.isPlaying);
-
-                if (dur > 0 && dur - elapsed <= timeUntilNextSong) {
-                    const r = await nextSongAction();
-                    if (r.ok) {
-                        emitSongChange(r.song);
-                    }
+            if (!pollLockRef.current) {
+                pollLockRef.current = true;
+                try {
+                    await refreshState();
+                } finally {
+                    pollLockRef.current = false;
                 }
-            }, 500);
-        })();
+            }
+
+            const intervalMs = radioMode ? 1500 : 800;
+
+            pollTimerRef.current = window.setTimeout(tick, intervalMs);
+        }
+
+        tick();
 
         return () => {
             cancelled = true;
-            if (pollingRef.current) window.clearInterval(pollingRef.current);
+            if (pollTimerRef.current) window.clearTimeout(pollTimerRef.current);
         };
-    }, []);
+    }, [radioMode]);
 
     return (
         <div className={cn(className, "px-4 bg-[rgba(0,0,0,0.96)] flex flex-col w-full rounded-t-xl")}>
             <div className="flex flex-row justify-around w-full">
                 <AudioItem
-                    className="flex-1 overflow-hidden"
+                    className="flex-1 justify-start overflow-hidden"
                     title={currentSong?.title || "Unknown"}
                     description={currentSong?.artist}
                     imageSrc={currentSong?.thumbnailUrl}
                     mode="player"
                     isMobile={isMobile}
+
                 />
 
                 <div className="flex flex-row gap-4 flex-1 items-center justify-center">
-                    <div onClick={previousButtonClicked}>
-                        <SkipBack size={isMobile ? 20 : 30} color="rgb(220,220,220)" />
-                    </div>
+                    {!radioMode && (
+                        <div onClick={previousButtonClicked}>
+                            <SkipBack size={isMobile ? 20 : 30} color="rgb(220,220,220)" />
+                        </div>
+                    )}
 
                     <div onClick={playButtonPressed}>
                         {!isPlaying && <PlayCircle size={isMobile ? 30 : 50} color="white" />}
                         {isPlaying && <PauseCircle size={isMobile ? 30 : 50} color="white" />}
                     </div>
 
-                    <div onClick={nextButtonClicked}>
-                        <SkipForward size={isMobile ? 20 : 30} color="rgb(220,220,220)" />
-                    </div>
+                    {!radioMode && (
+                        <div onClick={nextButtonClicked}>
+                            <SkipForward size={isMobile ? 20 : 30} color="rgb(220,220,220)" />
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-row flex-1 flex-shrink-0 gap-2 items-center justify-end">

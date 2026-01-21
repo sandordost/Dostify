@@ -1,19 +1,19 @@
 "use client"
 
 import { Song } from "@/lib/types/song";
-import { useGlobalState } from "../global-state";
 import MusicScreen from "./music-screen";
 import RadioScreen from "./radio-screen";
 
 type MainProps = {
-    className?: string
-    currentSong?: Song
+    className?: string;
+    currentSong?: Song;
+    radioMode: boolean;
+    isMobile?: boolean;
 }
 
-export default function AppMain({ className, currentSong }: MainProps) {
-    const { radioMode } = useGlobalState();
+export default function AppMain({ className, currentSong, radioMode, isMobile }: MainProps) {
 
     return radioMode ?
-        <RadioScreen className={className} /> :
+        <RadioScreen isMobile={isMobile} className={className} /> :
         <MusicScreen currentSong={currentSong} className={className} />
 }

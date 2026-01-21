@@ -49,7 +49,6 @@ export default function RootLayout({
       <body className="h-full">
         <GlobalStateProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-            <PageBackground />
             <main className="h-full">
               {children}
             </main>

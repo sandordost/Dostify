@@ -14,6 +14,7 @@ type SwipePlayerSheetProps = {
     expandedHeightVh?: number
     onSongChange?: (song?: Song) => void;
     currentSong?: Song
+    radioMode: boolean;
 }
 
 export default function SwipePlayerSheet({
@@ -23,6 +24,7 @@ export default function SwipePlayerSheet({
     expandedHeightVh = 85,
     onSongChange,
     currentSong,
+    radioMode,
 }: SwipePlayerSheetProps) {
     const { queue } = useSongQueue()
     const [expanded, setExpanded] = React.useState(false)
@@ -103,7 +105,7 @@ export default function SwipePlayerSheet({
                 onPointerCancel={reset}
             >
                 <div className="px-4 pt-3">
-                    <AppPlayer onSongChange={onSongChange} />
+                    <AppPlayer radioMode={radioMode} onSongChange={onSongChange} />
                 </div>
 
                 <div

@@ -1,9 +1,9 @@
 import { sleep } from "@/lib/utils";
 import { MusicService, Song } from "../song";
-import { BasePlayer } from "./player";
 import { pearClient } from "@/lib/pear/pear-client";
+import MusicPlayer from "./music-player";
 
-export default class YtPlayer extends BasePlayer {
+export default class YtMusicPlayer extends MusicPlayer {
     public async PlaySong(song: Song): Promise<void> {
         await pearClient.clearQueue();
         const tries = 20;

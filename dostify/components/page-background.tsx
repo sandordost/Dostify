@@ -1,11 +1,13 @@
 "use client"
 
 import BackgroundImage from "@/public/images/dust-background.jpg";
-import { useGlobalState } from "./global-state";
 
-export default function PageBackground() {
-    const { radioMode } = useGlobalState();
+type PageBackgroundProps = {
+    radioMode?: boolean;
+}
 
+export default function PageBackground({ radioMode }: PageBackgroundProps) {
+    console.log(radioMode);
     return (
         <div
             className={[

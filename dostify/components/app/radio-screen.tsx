@@ -1,7 +1,14 @@
+"use client"
+
 import { cn } from "@/lib/utils";
-import { LucideSearch } from "lucide-react";
-import { Input } from "../ui/input";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
+import AppSearchBar from "../ui/app-search-bar";
+import { searchStationsByName } from "@/app/actions/radio-search";
+import { RadioStation } from "@/lib/types/radio-station";
+import AudioItem from "../ui/audio-item";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useEffect } from "react";
+import { playRadioStationAction } from "@/app/actions/player";
 
 type RadioScreenProps = {
     className?: string;
@@ -11,23 +18,37 @@ type RadioScreenProps = {
 export default function RadioScreen({ className, isMobile }: RadioScreenProps) {
     const containerClassName = 'p-3 bg-[rgba(20,20,20,0.91)] rounded-md'
     const [searchText, setSearchText] = useState("");
+    const [stations, setStations] = useState<RadioStation[]>([]);
+    const debouncedSearch = useDebounce(searchText, 300)
 
-    function searchChanged(event: ChangeEvent<HTMLInputElement>): void {
-        setSearchText(event.target.value)
+    useEffect(() => {
+        if (!debouncedSearch.trim()) {
+            return
+        }
+
+        searchStationsByName(debouncedSearch).then(foundStations => {
+            setStations(foundStations);
+            console.log(foundStations);
+        });
+    }, [debouncedSearch])
+
+    const stationClicked = async (station: RadioStation) => {
+        await playRadioStationAction(station);
     }
 
     return (
-        <div className={cn(className, `flex ${isMobile ? "flex-col" : "flex-col"} gap-3`)}>
-            {/* Search Bar */}
-            <div className={cn(containerClassName, `flex flex-row items-center gap-3 py-2 pr-2 ${isMobile ? 'order-2' : ''}`)}>
-                <LucideSearch />
-                <Input onChange={searchChanged} type={'text'} style={{ background: 'none' }} className="h-10 m-0 border-none" />
-            </div>
+        <div className={cn(className, `flex flex-col gap-3`)}>
+            <AppSearchBar radioMode={true} isMobile={isMobile} containerClassName={containerClassName} searchTextChanged={setSearchText} />
             <div className={cn(containerClassName, `flex-2 p-5 flex-col overflow-hidden`)}>
-                <h1 className="text-xl font-bold mb-3">Populair</h1>
+                <h1 className="text-xl font-bold mb-3">Zoekresultaten</h1>
                 <div className="flex-1 h-full overflow-y-scroll">
                     <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(180px,1fr))] mb-10">
-
+                        {stations.map(station => {
+                            console.log(station.stationuuid);
+                            return (
+                                <AudioItem onClicked={() => stationClicked(station)} mode='result' className={"overflow-hidden"} imageSrc={station.favicon} key={station.stationuuid} title={station.name} description={station.country} />
+                            )
+                        })}
                     </div>
                 </div>
             </div>
