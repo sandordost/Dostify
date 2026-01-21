@@ -1,4 +1,4 @@
-import RadioPlayer from "./radio-player";
+import { RadioPlayer } from "./radio-player";
 import YtMusicPlayer from "./yt-music-player";
 
 export type PlayerType = "YtMusic" | "Radio";

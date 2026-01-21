@@ -38,7 +38,7 @@ export default function RadioScreen({ className, isMobile }: RadioScreenProps) {
 
     return (
         <div className={cn(className, `flex flex-col gap-3`)}>
-            <AppSearchBar radioMode={true} isMobile={isMobile} containerClassName={containerClassName} searchTextChanged={setSearchText} />
+            <AppSearchBar radioMode={true} isMobile={isMobile} containerClassName={containerClassName} searchTextChanged={setSearchText} value={searchText}/>
             <div className={cn(containerClassName, `flex-2 p-5 flex-col overflow-hidden`)}>
                 <h1 className="text-xl font-bold mb-3">Zoekresultaten</h1>
                 <div className="flex-1 h-full overflow-y-scroll">

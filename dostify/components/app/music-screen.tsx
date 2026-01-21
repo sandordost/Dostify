@@ -39,7 +39,7 @@ export default function MusicScreen({ className, currentSong }: MusicScreenProps
         <div className={cn(className, `flex ${isMobile ? "flex-col" : "flex-row"} gap-3`)}>
             <div className={`flex flex-col ${!isMobile && "flex-1"} gap-3`}>
                 {/* Search Bar */}
-                <AppSearchBar containerClassName={containerClassName} searchTextChanged={txt => setSearchText(txt)} />
+                <AppSearchBar containerClassName={containerClassName} searchTextChanged={txt => setSearchText(txt)} value={searchText} />
 
                 {/* Queue */}
                 {!isMobile && <QueuePanel currentSong={currentSong} queue={queue} containerClassName={containerClassName} />}
