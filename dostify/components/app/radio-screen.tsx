@@ -46,7 +46,7 @@ export default function RadioScreen({ className, isMobile }: RadioScreenProps) {
                         {stations.map(station => {
                             console.log(station.stationuuid);
                             return (
-                                <AudioItem onClicked={() => stationClicked(station)} mode='result' className={"overflow-hidden"} imageSrc={station.favicon} key={station.stationuuid} title={station.name} description={station.country} />
+                                <AudioItem onClicked={() => stationClicked(station)} mode={isMobile? 'result-mobile' : 'result'} className={"overflow-hidden"} imageSrc={station.favicon} key={station.stationuuid} title={station.name} description={station.country} />
                             )
                         })}
                     </div>
