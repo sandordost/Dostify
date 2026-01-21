@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { GlobalStateProvider } from "@/components/global-state";
 import PageBackground from "@/components/page-background";
 import { Toaster } from "sonner"
+import Keyboard from "react-simple-keyboard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

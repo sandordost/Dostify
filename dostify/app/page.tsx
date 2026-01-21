@@ -7,6 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import SwipePlayerSheet from "@/components/app/swipe-player-sheet";
 import { useState } from "react";
 import { Song } from "@/lib/types/song";
+import Keyboard from "react-simple-keyboard";
 
 export default function Home() {
   const isMobile = useIsMobile();

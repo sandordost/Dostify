@@ -146,4 +146,14 @@
     --sidebar-ring: oklch(0.439 0 0);
   }
 
+  @import "react-simple-keyboard/build/css/index.css";
+
+  .simple-keyboard {
+    color: black;
+    padding: 10px;
+  }
+
+  .simple-keyboard .hg-button {
+    height: 5.5vh;
+  }
 }
