@@ -46,18 +46,20 @@ export default function MusicScreen({ className, currentSong }: MusicScreenProps
     }, [debouncedSearch, searchYt])
 
     useEffect(() => {
-        function onPointerDown(e: PointerEvent) {
-            const path = (e.composedPath?.() ?? []) as EventTarget[]
-            const inInput = path.includes(inputRef.current as any)
-            const inKeyboard = path.includes(keyboardWrapRef.current as any)
+        if (isMobile) return; // ✅ mobiel: laat OS keyboard met rust
 
-            if (inInput || inKeyboard) return
-            setShowKeyboard(false)
+        function onPointerDown(e: PointerEvent) {
+            const path = (e.composedPath?.() ?? []) as EventTarget[];
+            const inInput = path.includes(inputRef.current as any);
+            const inKeyboard = path.includes(keyboardWrapRef.current as any);
+
+            if (inInput || inKeyboard) return;
+            setShowKeyboard(false);
         }
 
-        document.addEventListener("pointerdown", onPointerDown, true) // capture!
-        return () => document.removeEventListener("pointerdown", onPointerDown, true)
-    }, [])
+        document.addEventListener("pointerdown", onPointerDown, true);
+        return () => document.removeEventListener("pointerdown", onPointerDown, true);
+    }, [isMobile]);
 
     function searchChanged(event: ChangeEvent<HTMLInputElement>) {
         const value = event.target.value
@@ -67,9 +69,9 @@ export default function MusicScreen({ className, currentSong }: MusicScreenProps
 
     function onKeyboardChange(input: string) {
         setSearchText(input)
-        // zorg dat cursor blijft werken: focus input
-        requestAnimationFrame(() => inputRef.current?.focus())
+        if (!isMobile) requestAnimationFrame(() => inputRef.current?.focus())
     }
+
 
     function armShift() {
         setLayoutName((prev) => {
@@ -124,7 +126,9 @@ export default function MusicScreen({ className, currentSong }: MusicScreenProps
         maybeReturnFromShift(button)
     }
 
-
+    useEffect(() => {
+        if (isMobile) setShowKeyboard(false);
+    }, [isMobile]);
 
     return (
         <>
@@ -137,11 +141,11 @@ export default function MusicScreen({ className, currentSong }: MusicScreenProps
                             ref={inputRef}
                             value={searchText}
                             onChange={searchChanged}
-                            onFocus={() => setShowKeyboard(true)}
+                            onFocus={() => { if (!isMobile) setShowKeyboard(true) }}
+                            onPointerDown={() => { if (isMobile) inputRef.current?.focus() }} // ✅ force focus on mobile
                             type="text"
                             className="h-10 m-0 border-none"
                             placeholder="Zoek muziek..."
-                            inputMode="none" // voorkomt OS keyboard als je jouw eigen keyboard wil
                             autoComplete="off"
                             spellCheck={false}
                         />
