@@ -176,7 +176,7 @@ export default function MusicScreen({ className, currentSong }: MusicScreenProps
             </div>
 
             {/* On-screen keyboard (mobile only, fixed bottom) */}
-            {showKeyboard && (
+            {!isMobile && showKeyboard && (
                 <div
                     ref={keyboardWrapRef}
                     className="fixed inset-x-0 bottom-[10vh] z-[999] p-2 w-[90vw] left-[5vw]"
