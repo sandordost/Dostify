@@ -8,6 +8,7 @@ import { useState } from "react"
 import { useRef } from "react"
 import { ChangeEvent } from "react"
 import Keyboard from "react-simple-keyboard"
+import { useIsTablet } from "@/hooks/use-tablet"
 
 type AppSearchBarProps = {
     value?: string;
@@ -24,10 +25,13 @@ export default function AppSearchBar({ value, containerClassName, isMobile, sear
     const inputRef = useRef<HTMLInputElement | null>(null)
     const keyboardRef = useRef<any>(null)
     const keyboardWrapRef = useRef<HTMLDivElement | null>(null)
+    const isTablet = useIsTablet();
+
+    const isMobileDevice = () => (isTablet || isMobile) ?? false;
 
     useEffect(() => {
-        if (isMobile) setShowKeyboard(false);
-    }, [isMobile]);
+        if (isMobile || isTablet) setShowKeyboard(false);
+    }, [isMobile, isTablet]);
 
     function onKeyboardKeyPress(button: string) {
         if (button === "{enter}" || button === "{close}") {
@@ -57,7 +61,7 @@ export default function AppSearchBar({ value, containerClassName, isMobile, sear
 
 
     useEffect(() => {
-        if (isMobile) return; // ✅ mobiel: laat OS keyboard met rust
+        if (isMobileDevice()) return; // ✅ mobiel: laat OS keyboard met rust
 
         function onPointerDown(e: PointerEvent) {
             const path = (e.composedPath?.() ?? []) as EventTarget[];
@@ -70,7 +74,7 @@ export default function AppSearchBar({ value, containerClassName, isMobile, sear
 
         document.addEventListener("pointerdown", onPointerDown, true);
         return () => document.removeEventListener("pointerdown", onPointerDown, true);
-    }, [isMobile]);
+    }, [isMobile, isTablet]);
 
     function searchChanged(event: ChangeEvent<HTMLInputElement>) {
         const value = event.target.value
@@ -80,7 +84,7 @@ export default function AppSearchBar({ value, containerClassName, isMobile, sear
 
     function onKeyboardChange(input: string) {
         searchTextChanged?.(input)
-        if (!isMobile) requestAnimationFrame(() => inputRef.current?.focus())
+        if (!isMobileDevice()) requestAnimationFrame(() => inputRef.current?.focus())
     }
 
 
@@ -119,8 +123,8 @@ export default function AppSearchBar({ value, containerClassName, isMobile, sear
                     ref={inputRef}
                     value={value}
                     onChange={searchChanged}
-                    onFocus={() => { if (!isMobile) setShowKeyboard(true) }}
-                    onPointerDown={() => { if (isMobile) inputRef.current?.focus() }} // ✅ force focus on mobile
+                    onFocus={() => { if (!isMobileDevice()) setShowKeyboard(true) }}
+                    onPointerDown={() => { if (isMobileDevice()) inputRef.current?.focus() }} // ✅ force focus on mobile
                     type="text"
                     className="h-10 m-0 border-none"
                     placeholder="Zoek muziek..."
@@ -129,7 +133,7 @@ export default function AppSearchBar({ value, containerClassName, isMobile, sear
                 />
             </div>
             {/* On-screen keyboard (mobile only, fixed bottom) */}
-            {!isMobile && showKeyboard && (
+            {!isMobileDevice() && showKeyboard && (
                 <div
                     ref={keyboardWrapRef}
                     className="fixed inset-x-0 bottom-[10vh] z-[999] p-2 w-[90vw] left-[5vw]"

@@ -13,11 +13,12 @@ import { toast } from "sonner"
 import AppSearchBar from "../ui/app-search-bar"
 
 type MusicScreenProps = {
-    className?: string
-    currentSong?: Song
+    className?: string;
+    currentSong?: Song;
+    isMobile?: boolean;
 }
 
-export default function MusicScreen({ className, currentSong }: MusicScreenProps) {
+export default function MusicScreen({ className, currentSong, isMobile }: MusicScreenProps) {
     const containerClassName = "p-3 bg-[rgba(20,20,20,0.91)] rounded-md"
 
     const [songs, setSongs] = useState<Song[]>([])
@@ -25,7 +26,6 @@ export default function MusicScreen({ className, currentSong }: MusicScreenProps
     const { searchSongs: searchYt } = usePearDesktop()
     const { queue, addToQueue } = useSongQueue()
     const debouncedSearch = useDebounce(searchText, 300)
-    const isMobile = useIsMobile()
 
     useEffect(() => {
         if (!debouncedSearch.trim()) {
@@ -39,7 +39,7 @@ export default function MusicScreen({ className, currentSong }: MusicScreenProps
         <div className={cn(className, `flex ${isMobile ? "flex-col" : "flex-row"} gap-3`)}>
             <div className={`flex flex-col ${!isMobile && "flex-1"} gap-3`}>
                 {/* Search Bar */}
-                <AppSearchBar containerClassName={containerClassName} searchTextChanged={txt => setSearchText(txt)} value={searchText} />
+                <AppSearchBar isMobile={isMobile} containerClassName={containerClassName} searchTextChanged={txt => setSearchText(txt)} value={searchText} />
 
                 {/* Queue */}
                 {!isMobile && <QueuePanel currentSong={currentSong} queue={queue} containerClassName={containerClassName} />}
