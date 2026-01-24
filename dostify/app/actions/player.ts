@@ -47,6 +47,7 @@ export async function togglePlayAction() {
 
 export async function nextSongAction() {
     const p = player();
+    console.log(p);
     if (p instanceof MusicPlayer) {
         const nextSong = songQueueStoreServer.next();
         if (!nextSong) return { ok: false as const };

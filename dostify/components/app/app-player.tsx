@@ -54,14 +54,6 @@ export default function AppPlayer({ className, onSongChange, radioMode }: Player
             setCurrentTime(elapsed);
             setMaxTime(dur);
             setIsPlaying(s.isPlaying);
-
-            if (dur > 0 && dur - elapsed <= timeUntilNextSong) {
-                const r = await nextSongAction();
-                if (!r) return;
-                if (r.ok) {
-                    emitSongChange(r.song);
-                }
-            }
         }
         else {
             // Radio Mode

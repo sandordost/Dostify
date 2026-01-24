@@ -15,5 +15,5 @@ export default function AppMain({ className, currentSong, radioMode, isMobile }:
 
     return radioMode ?
         <RadioScreen isMobile={isMobile} className={className} /> :
-        <MusicScreen currentSong={currentSong} className={className} />
+        <MusicScreen isMobile={isMobile} currentSong={currentSong} className={className} />
 }
