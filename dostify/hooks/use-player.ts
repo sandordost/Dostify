@@ -18,7 +18,7 @@ export function usePlayer() {
 
         pollingRef.current = window.setInterval(() => {
             refresh();
-        }, 750);
+        }, 1000);
 
         return () => {
             if (pollingRef.current) window.clearInterval(pollingRef.current);

@@ -18,7 +18,7 @@ export function useSongQueue() {
 
         pollingRef.current = window.setInterval(() => {
             refresh();
-        }, 750);
+        }, 1500);
 
         return () => {
             if (pollingRef.current) window.clearInterval(pollingRef.current);
