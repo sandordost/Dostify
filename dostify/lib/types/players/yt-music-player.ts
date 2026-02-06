@@ -48,6 +48,8 @@ export default class YtMusicPlayer extends MusicPlayer {
             service: 'yt-music',
             url: songRes.url || '',
             artist: songRes.artist || '',
+            views: 0,
+            viewsString: "",
             thumbnailUrl: songRes.imageSrc || '',
             songDuration: songRes.songDuration || 0,
             elapsedTime: songRes.elapsedSeconds || 0
