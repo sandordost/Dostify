@@ -17,3 +17,12 @@ export function formatTime(seconds: number) {
 export function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function truncate(text: string | undefined | null, max: number): string {
+  const s = (text ?? "").trim();
+  if (!s) return "";
+  if (s.length <= max) return s;
+
+  if (max <= 3) return ".".repeat(max);
+  return s.slice(0, max - 3).trimEnd() + " ..";
+}

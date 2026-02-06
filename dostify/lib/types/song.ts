@@ -8,5 +8,7 @@ export interface Song {
     artist: string;
     thumbnailUrl: string;
     elapsedTime: number;
+    views: number;
+    viewsString: string;
     songDuration: number;
 }

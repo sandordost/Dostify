@@ -71,6 +71,8 @@ export default function AppPlayer({ className, onSongChange, radioMode }: Player
                 title: radioState.station ?? "Onbekend station",
                 artist: `${radioState.nowPlaying?.artist} - ${radioState.nowPlaying?.title}`,
                 elapsedTime: radioState.timeElapsedSeconds ?? 0,
+                viewsString: "",
+                views: 0,
                 songDuration: radioState.cacheSeconds ?? 0,
             }
             setCurrentSong(radioToSong);

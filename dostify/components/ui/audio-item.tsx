@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { cn, truncate } from "@/lib/utils"
 import AudioPlaceholderImage from "@/public/images/audio-placeholder.jpg"
 
 type AudioItemMode = 'result' | 'queue' | 'player' | 'result-mobile'
@@ -11,6 +11,7 @@ type AudioItemProps = {
     className?: string
     imageSrc?: string
     mode?: AudioItemMode
+    viewsString?: string;
     onClicked?: () => void;
     isMobile?: boolean;
     isActive?: boolean;
@@ -35,7 +36,7 @@ function ResultContainer(props: AudioItemProps) {
         <div
             className={cn(
                 props.className,
-                "select-none cursor-pointer bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-60 w-45 flex flex-col items-center transition hover:bg-[rgba(55,55,55,0.85)] hover:scale-[1.02] active:scale-[0.98]"
+                "relative select-none cursor-pointer bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-60 w-45 flex flex-col items-center transition hover:bg-[rgba(55,55,55,0.85)] hover:scale-[1.02] active:scale-[0.98]"
             )}
             onClick={props.onClicked}
         >
@@ -45,10 +46,23 @@ function ResultContainer(props: AudioItemProps) {
                     backgroundImage: `url(${props.imageSrc || AudioPlaceholderImage.src})`,
                 }}
             />
-            <div className="mt-2">
-                <h2 className="text-sm font-bold">{props.title}</h2>
-                <h3 className="text-xs text-[rgb(210,210,210)]">{props.description}</h3>
+            <div className="mt-2 w-full">
+                {(() => {
+                    const title = truncate(props.title, 33) || "Unknown";
+                    const desc = truncate(props.description, 20) || "";
+                    return (
+                        <>
+                            <h2 className="text-sm font-bold">{title}</h2>
+                            <h3 className="text-xs text-[rgb(210,210,210)]">{desc}</h3>
+                        </>
+                    )
+                })()}
             </div>
+            {props.viewsString != null && (
+                <div className="absolute bottom-2 right-2 text-xs text-[rgb(180,180,180)]">
+                    {props.viewsString}
+                </div>
+            )}
         </div>
     );
 }
@@ -58,7 +72,7 @@ function ResultMobileContainer(props: AudioItemProps) {
         <div
             className={cn(
                 props.className,
-                `select-none cursor-pointer bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-20 w-full flex flex-row items-center transition active:bg-[rgba(55,55,55,0.85)] active:scale-[1.02]`
+                `relative select-none cursor-pointer bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-20 w-full flex flex-row items-center transition active:bg-[rgba(55,55,55,0.85)] active:scale-[1.02]`
             )}
             onClick={props.onClicked}
         >
@@ -72,6 +86,11 @@ function ResultMobileContainer(props: AudioItemProps) {
                 <h2 className="text-sm font-bold">{props.title}</h2>
                 <h3 className="text-xs text-[rgb(210,210,210)]">{props.description}</h3>
             </div>
+            {props.viewsString != null && (
+                <div className="absolute bottom-2 right-2 text-xs text-[rgb(180,180,180)]">
+                    {props.viewsString}
+                </div>
+            )}
         </div>
     );
 }
@@ -81,7 +100,7 @@ function QueueContainer(props: AudioItemProps) {
         <div
             className={cn(
                 props.className,
-                `select-none cursor-default bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-20 w-full flex flex-row items-center ${props.isActive ? "bg-[rgba(55,55,55,0.85)]" : ""}`
+                `relative select-none cursor-default bg-[rgba(33,33,33,0.73)] rounded-md p-3 h-20 w-full flex flex-row items-center ${props.isActive ? "bg-[rgba(55,55,55,0.85)]" : ""}`
             )}
             onClick={props.onClicked}
         >
@@ -95,6 +114,11 @@ function QueueContainer(props: AudioItemProps) {
                 <h2 className="text-sm font-bold">{props.title}</h2>
                 <h3 className="text-xs text-[rgb(210,210,210)]">{props.description}</h3>
             </div>
+            {props.viewsString != null && (
+                <div className="absolute bottom-2 right-2 text-xs text-[rgb(180,180,180)]">
+                    {props.viewsString}
+                </div>
+            )}
         </div>
     );
 }
@@ -104,7 +128,7 @@ function PlayerContainer(props: AudioItemProps) {
         <div
             className={cn(
                 props.className,
-                "cursor-default py-3 h-20 w-full flex flex-row items-center"
+                "relative cursor-default py-3 h-20 w-full flex flex-row items-center"
             )}
             onClick={props.onClicked}
         >
