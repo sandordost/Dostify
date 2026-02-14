@@ -60,7 +60,7 @@ export default function MusicScreen({ className, currentSong, isMobile }: MusicS
                         title={song.title}
                         imageSrc={song.thumbnailUrl}
                         description={song.artist}
-                        viewsString={(song as any).viewsString}
+                        viewsString={song.viewsString}
                         onClicked={() => {
                             if (String(song.id).startsWith("missing:")) {
                                 toast.error("Dit nummer kon niet automatisch gevonden worden.", { position: "top-center" })
